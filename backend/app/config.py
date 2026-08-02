@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./app.db"
 
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.0-flash"
+    gemini_model: str = "gemini-flash-latest"
     gemini_timeout_seconds: float = 20.0
 
     cors_origins: str = "*"
