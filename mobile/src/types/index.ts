@@ -48,6 +48,8 @@ export interface Invitation {
   created_at: string;
   updated_at: string;
   bucket: Bucket;
+  can_respond: boolean;
+  can_submit_feedback: boolean;
 }
 
 export interface FeedbackInput {

@@ -15,6 +15,7 @@ import { useGenerateInsight } from "../../src/hooks/useInsight";
 import { useProfile, useUpdateProfile } from "../../src/hooks/useProfile";
 
 const BIO_LIMIT = 400;
+const MAX_INSIGHT_GENERATIONS_PER_SESSION = 5;
 
 export default function ProfileScreen() {
   const { data: profile, isLoading, isError, error, refetch } = useProfile();
@@ -28,6 +29,7 @@ export default function ProfileScreen() {
   const [bio, setBio] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [insightGenerationCount, setInsightGenerationCount] = useState(0);
 
   useEffect(() => {
     if (profile && !isEditing) {
@@ -217,9 +219,17 @@ export default function ProfileScreen() {
         </Text>
 
         <Pressable
-          style={[styles.button, generateInsight.isPending && styles.buttonDisabled]}
-          onPress={() => generateInsight.mutate()}
-          disabled={generateInsight.isPending}
+          style={[
+            styles.button,
+            (generateInsight.isPending || insightGenerationCount >= MAX_INSIGHT_GENERATIONS_PER_SESSION) &&
+              styles.buttonDisabled,
+          ]}
+          onPress={() => {
+            if (insightGenerationCount >= MAX_INSIGHT_GENERATIONS_PER_SESSION) return;
+            setInsightGenerationCount((count) => count + 1);
+            generateInsight.mutate();
+          }}
+          disabled={generateInsight.isPending || insightGenerationCount >= MAX_INSIGHT_GENERATIONS_PER_SESSION}
         >
           {generateInsight.isPending ? (
             <ActivityIndicator color="#fff" />
@@ -227,6 +237,16 @@ export default function ProfileScreen() {
             <Text style={styles.buttonText}>Generate Profile Insight</Text>
           )}
         </Pressable>
+
+        <Text style={styles.mutedText}>
+          {insightGenerationCount}/{MAX_INSIGHT_GENERATIONS_PER_SESSION} generations used this session
+        </Text>
+
+        {insightGenerationCount >= MAX_INSIGHT_GENERATIONS_PER_SESSION && (
+          <Text style={styles.errorText}>
+            Session limit reached. Restart the app to generate more insights.
+          </Text>
+        )}
 
         {generateInsight.isError && (
           <Text style={styles.errorText}>

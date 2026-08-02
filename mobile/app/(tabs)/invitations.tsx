@@ -122,7 +122,7 @@ function UpcomingItem({ invitation }: { invitation: Invitation }) {
       <Text style={styles.mutedText}>{formatEventWindow(invitation)}</Text>
       {invitation.location ? <Text style={styles.mutedText}>{invitation.location}</Text> : null}
 
-      {invitation.bucket === "ACTIONABLE" && (
+      {invitation.can_respond && (
         <>
           <View style={styles.row}>
             <Pressable
@@ -189,7 +189,7 @@ function HistoryItem({ invitation }: { invitation: Invitation }) {
         <Text style={styles.badgeText}>{HISTORY_LABELS[invitation.bucket] ?? invitation.bucket}</Text>
       </View>
 
-      {invitation.bucket === "ATTENDED" && <FeedbackForm invitationId={invitation.id} />}
+      {invitation.can_submit_feedback && <FeedbackForm invitationId={invitation.id} />}
     </View>
   );
 }
