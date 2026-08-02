@@ -211,6 +211,21 @@ def test_attendance_unknown_invitation_returns_404(client, db):
     assert resp.status_code == 404
 
 
+def test_attendance_cannot_be_re_recorded(client, db):
+    now = _now()
+    inv = _insert_invitation(
+        db,
+        event_start=now - timedelta(days=2),
+        event_end=now - timedelta(days=2, hours=-2),
+        response_status="accepted",
+        attendance_status="attended",
+        responded_at=now - timedelta(days=3),
+        attendance_recorded_at=now - timedelta(days=1),
+    )
+    resp = client.patch(f"/invitations/{inv.id}/attendance", json={"attendance": "not_attended"})
+    assert resp.status_code == 409
+
+
 # ---------- Feedback gating ----------
 
 def test_feedback_allowed_when_attended(client, db):
@@ -288,3 +303,61 @@ def test_feedback_invalid_payload_returns_422(client, db):
     )
     resp = client.post(f"/invitations/{inv.id}/feedback", json={"comment": ""})
     assert resp.status_code == 422
+
+
+def test_feedback_rejected_when_already_submitted(client, db):
+    now = _now()
+    inv = _insert_invitation(
+        db,
+        event_start=now - timedelta(days=5),
+        event_end=now - timedelta(days=5, hours=-2),
+        response_status="accepted",
+        attendance_status="attended",
+        responded_at=now - timedelta(days=6),
+        attendance_recorded_at=now - timedelta(days=4),
+    )
+    first = client.post(f"/invitations/{inv.id}/feedback", json={"rating": 5, "comment": "Great!"})
+    assert first.status_code == 201
+
+    second = client.post(f"/invitations/{inv.id}/feedback", json={"rating": 1, "comment": "Again"})
+    assert second.status_code == 409
+
+
+# ---------- Computed client flags (can_respond / can_submit_feedback) ----------
+
+def test_can_respond_true_for_actionable_pending(client, db):
+    inv = _insert_invitation(db)
+    upcoming = client.get(f"/users/{USER}/invitations").json()
+    match = next(i for i in upcoming if i["id"] == inv.id)
+    assert match["can_respond"] is True
+    assert match["can_submit_feedback"] is False
+
+
+def test_can_respond_false_after_accepting(client, db):
+    inv = _insert_invitation(db)
+    client.post(f"/invitations/{inv.id}/respond", json={"action": "accept"})
+    upcoming = client.get(f"/users/{USER}/invitations").json()
+    match = next(i for i in upcoming if i["id"] == inv.id)
+    assert match["can_respond"] is False
+
+
+def test_can_submit_feedback_true_when_attended_and_no_feedback_yet(client, db):
+    now = _now()
+    inv = _insert_invitation(
+        db,
+        event_start=now - timedelta(days=5),
+        event_end=now - timedelta(days=5, hours=-2),
+        response_status="accepted",
+        attendance_status="attended",
+        responded_at=now - timedelta(days=6),
+        attendance_recorded_at=now - timedelta(days=4),
+    )
+    history = client.get(f"/users/{USER}/gathering-history").json()
+    match = next(i for i in history if i["id"] == inv.id)
+    assert match["can_submit_feedback"] is True
+
+    client.post(f"/invitations/{inv.id}/feedback", json={"comment": "Nice"})
+
+    history_after = client.get(f"/users/{USER}/gathering-history").json()
+    match_after = next(i for i in history_after if i["id"] == inv.id)
+    assert match_after["can_submit_feedback"] is False

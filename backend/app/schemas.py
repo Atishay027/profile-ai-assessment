@@ -73,6 +73,8 @@ class InvitationOut(BaseModel):
     created_at: datetime
     updated_at: datetime
     bucket: Bucket
+    can_respond: bool
+    can_submit_feedback: bool
 
     model_config = {"from_attributes": True}
 
