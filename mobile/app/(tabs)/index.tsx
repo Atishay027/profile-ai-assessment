@@ -14,7 +14,7 @@ import { colors } from "../../src/components/theme";
 import { useGenerateInsight } from "../../src/hooks/useInsight";
 import { useProfile, useUpdateProfile } from "../../src/hooks/useProfile";
 
-const BIO_LIMIT = 500;
+const BIO_LIMIT = 400;
 
 export default function ProfileScreen() {
   const { data: profile, isLoading, isError, error, refetch } = useProfile();

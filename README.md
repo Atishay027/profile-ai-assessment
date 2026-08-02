@@ -217,7 +217,7 @@ add it:
 
 ## Assumptions
 - Single demo user (`user-001`); no multi-user/list-of-users concept exists anywhere.
-- Bio limit set at 500 characters (both Pydantic `max_length` and the mobile character counter).
+- Bio limit set at 400 characters (both Pydantic `max_length` and the mobile character counter).
 - The attendance endpoint (`PATCH /invitations/{id}/attendance`) is intentionally admin/test-only — it exists
   to drive the demo and the automated tests, with no corresponding mobile UI, per the brief.
 - A user can submit feedback for the same attended invitation more than once at the API level (no uniqueness

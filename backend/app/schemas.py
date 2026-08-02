@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-BIO_MAX_LENGTH = 500
+BIO_MAX_LENGTH = 400
 
 
 # ---------- Profile ----------
